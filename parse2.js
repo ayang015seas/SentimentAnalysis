@@ -1,6 +1,8 @@
 var xlsx = require('node-xlsx').default;
 var fs = require('fs');
 var ss = require('simple-statistics');
+var polarity = require('polarity')
+const createCsvWriter = require('csv-writer').createObjectCsvWriter;  
 
 var Sentiment = require('sentiment');
 var sentiment = new Sentiment();
@@ -179,7 +181,8 @@ var top100SortedMap = sortByWords(top100Map);
 
 var positiveWordMap = sortByWords(createWordMap(positiveWords));
 var negativeWordMap = sortByWords(createWordMap(negativeWords));
-
+var positivePolarity = polarity(positiveWordMap);
+var negativePolarity = polarity(negativeWordMap);
 
 console.log(positiveWordMap);
 console.log(negativeWordMap);
