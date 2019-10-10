@@ -3,16 +3,17 @@ var fs = require('fs');
 var ss = require('simple-statistics');
 var polarity = require('polarity')
 const createCsvWriter = require('csv-writer').createObjectCsvWriter;  
+var plotly = require('plotly')('ayang015', 'UL07T0DbZelh29kuEybC');
 
 var Sentiment = require('sentiment');
 var sentiment = new Sentiment();
 // var split = require('split-string-words');
 
-const workSheetsFromBuffer2 = xlsx.parse(fs.readFileSync(`${__dirname}/data2.xlsx`));
-const workSheetsFromBuffer3 = xlsx.parse(fs.readFileSync(`${__dirname}/data3.xlsx`));
-const workSheetsFromBuffer4 = xlsx.parse(fs.readFileSync(`${__dirname}/data4.xlsx`));
-const workSheetsFromBuffer5 = xlsx.parse(fs.readFileSync(`${__dirname}/data5.xlsx`));
-const workSheetsFromBuffer6 = xlsx.parse(fs.readFileSync(`${__dirname}/data7.xlsx`));
+const workSheetsFromBuffer2 = xlsx.parse(fs.readFileSync(`${__dirname}/data2e.xlsx`));
+const workSheetsFromBuffer3 = xlsx.parse(fs.readFileSync(`${__dirname}/data3e.xlsx`));
+const workSheetsFromBuffer4 = xlsx.parse(fs.readFileSync(`${__dirname}/data4e.xlsx`));
+const workSheetsFromBuffer5 = xlsx.parse(fs.readFileSync(`${__dirname}/data5e.xlsx`));
+const workSheetsFromBuffer6 = xlsx.parse(fs.readFileSync(`${__dirname}/data6e.xlsx`));
 
 
 var data1 = workSheetsFromBuffer2[0].data;
@@ -33,12 +34,17 @@ var jsonObjects = [];
 var allWords = [];
 var allScores = []
 
+var positivePosts = [];
+var negativePosts = [];
+var neutralPosts = [];
+
+var positiveWords = [];
+var negativeWords = [];
+
 var positiveNum = 0;
 var negativeNum = 0;
 var neutralNum = 0;
 
-var positiveWords = [];
-var negativeWords = [];
 
 var overallDilution = [];
 var top100Dilution = [];
@@ -48,6 +54,8 @@ combined = combined.concat(data2);
 combined = combined.concat(data3);
 combined = combined.concat(data4);
 combined = combined.concat(data5);
+
+console.log(combined);
 
 failures = 0;
 // remove all non-alphanumeric characters
@@ -65,12 +73,36 @@ for (var i = 0; i < combined.length; i++) {
 		allWords = allWords.concat(parsedInput.split(" "));
 		if (!isNaN(popularity)) {
 			jsonObjects.push({num: popularity, comment: parsedInput, score: result.score,
-				length: length, comparative: result.comparative});
+				length: length, comparative: result.comparative, words: result.words});
+
+			if (result.score > 0) {
+				positivePosts.push({num: popularity, comment: parsedInput, score: result.score,
+				length: length, comparative: result.comparative, words: result.words});
+			} else if (result.score == 0) {
+				neutralPosts.push({num: popularity, comment: parsedInput, score: result.score,
+				length: length, comparative: result.comparative, words: result.words});
+			} else {
+				negativePosts.push({num: popularity, comment: parsedInput, score: result.score,
+				length: length, comparative: result.comparative, words: result.words});
+			}
 		}
 		else {
 			jsonObjects.push({num: 0, comment: parsedInput, score: result.score,
-			length: length, comparative: result.comparative});
+			length: length, comparative: result.comparative, words: result.words});
+			if (result.score > 0) {
+				positivePosts.push({num: 0, comment: parsedInput, score: result.score,
+				length: length, comparative: result.comparative, words: result.words});
+			} else if (result.score == 0) {
+				neutralPosts.push({num: 0, comment: parsedInput, score: result.score,
+				length: length, comparative: result.comparative, words: result.words});
+			} else {
+				negativePosts.push({num: 0, comment: parsedInput, score: result.score,
+				length: length, comparative: result.comparative, words: result.words});
+			}
 		}
+
+
+
 		if (result.score > 0) {
 			positiveNum++;
 		} else if (result.score == 0) {
@@ -92,6 +124,8 @@ for (var i = 0; i < combined.length; i++) {
 		num = 0;
 	}
 }
+
+console.log(positivePosts)
 
 function createWordMap (wordsArray) {
   // create map for word counts
@@ -137,6 +171,7 @@ overallScores = [];
 top100Scores = [];
 top100Topics = [];
 
+
 overallLengths = [];
 top100Lengths = [];
 
@@ -163,7 +198,6 @@ for (var i = 0; i < top100.length; i++) {
 	catch {
 		continue;
 	}
-
 }
 for (var i = 0; i < 499; i++) {
 	try	{
@@ -185,8 +219,33 @@ var positivePolarity = polarity(positiveWordMap);
 var negativePolarity = polarity(negativeWordMap);
 
 console.log(positiveWordMap);
-console.log(negativeWordMap);
+console.log(negativeWordMap)
 
+console.log("TOP 100")
+console.log(top100SortedMap);
+
+var positiveLengths = [];
+var negativeLengths = [];
+var neutralLengths = [];
+
+
+for (var i = 0; i < positivePosts.length; i++) {
+	positiveLengths.push(positivePosts[i].length);
+}
+for (var i = 0; i < negativePosts.length; i++) {
+	negativeLengths.push(negativePosts[i].length);
+}
+for (var i = 0; i < neutralPosts.length; i++) {
+	neutralLengths.push(neutralPosts[i].length);
+}
+
+
+console.log(" ");
+console.log("Positive Length Mean Stat " + ss.mean(positiveLengths));
+console.log(" ");
+console.log("Negative Length Mean Stat " + ss.mean(negativeLengths));
+console.log(" ");
+console.log("Neutral Length Mean Stat " + ss.mean(neutralLengths));
 
 // compile statistics 
 console.log(" ");
@@ -231,8 +290,26 @@ console.log(" ");
 console.log(combined.length);
 console.log('failure rate ' + failures);
 
+
+
+// overall posts by sentiment 
+
 // compute overall sentiment 
 
+// create graphs 
 
+/*
+var overallSentimentData = [
+  {
+    x: ['Positive', 'Negative', 'Neutral'],
+    y: [146, 160, 191],
+    type: 'bar'
+  }
+];
+
+var layout = {fileopt : "overwrite", filename : "overallsentiment"};
+
+plotly.newPlot('myDiv', overallSentimentData);
+*/
 // console.log(jsonObjects);
 // console.log(combined);

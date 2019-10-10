@@ -5,7 +5,9 @@
   "main": "parse.js",
   "dependencies": {
     "csv-writer": "^1.5.0",
+    "d3-node": "^2.2.0",
     "node-xlsx": "^0.15.0",
+    "plotly": "^1.0.6",
     "polarity": "^3.0.3",
     "sentiment": "^5.0.2",
     "simple-statistics": "^7.0.5",
