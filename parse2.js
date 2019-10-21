@@ -65,7 +65,10 @@ for (var i = 0; i < combined.length; i++) {
 		var parsedInput = combined[i][0].replace(/\W/g, ' ').toLowerCase();
 		var result = sentiment.analyze(parsedInput);
 		var popularity = parseInt(commentNum);
-		var length = combined[i][0].length;
+
+		var length = combined[i][0].split(" ").length;
+
+		// var length = combined[i][0].length;
 
 		positiveWords = positiveWords.concat(result.positive);
 		negativeWords = negativeWords.concat(result.negative);
